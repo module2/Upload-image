@@ -3,6 +3,8 @@ package hello;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
+import hello.dao.FileUploadDAO;
+import hello.model.FileDemo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -22,10 +24,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import hello.storage.StorageFileNotFoundException;
 import hello.storage.StorageService;
 
+import javax.servlet.http.HttpServletRequest;
+
 @Controller
 public class FileUploadController {
 
     private final StorageService storageService;
+
+    @Autowired
+    private FileUploadDAO fileUploadDAO;
 
     @Autowired
     public FileUploadController(StorageService storageService) {
@@ -54,8 +61,13 @@ public class FileUploadController {
 
     @PostMapping("/")
     public String handleFileUpload(@RequestParam("file") MultipartFile file,
-                                   RedirectAttributes redirectAttributes) {
-
+//                                   HttpServletRequest request,
+                                   RedirectAttributes redirectAttributes) throws Exception {
+        System.out.println("Saving file: " + file.getOriginalFilename());
+        FileDemo uploadFile = new FileDemo();
+        uploadFile.setFileName(file.getOriginalFilename());
+        uploadFile.setData(file.getBytes());
+        fileUploadDAO.save(uploadFile);
         storageService.store(file);
         redirectAttributes.addFlashAttribute("message",
                 "You successfully uploaded " + file.getOriginalFilename() + "!");
